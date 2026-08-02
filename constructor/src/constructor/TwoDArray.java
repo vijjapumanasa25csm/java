@@ -1,0 +1,16 @@
+package constructor;
+
+public class TwoDArray {
+	public static void main(String[]args) {
+		int x[][]= {{3,5,9},{7,5,9},{1,6,2}};
+		System.out.println(x[1][1]);
+		System.out.println(x[2][2]);
+		System.out.println(x[2][1]); 
+		for(int i=0;i<=2;i++) {
+		for(int j=0;j<=2;j++) {
+			System.out.println(x[i][j]+"");
+	}
+           System.out.println();
+}
+}
+}
