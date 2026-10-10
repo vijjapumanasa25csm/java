@@ -1,204 +1,142 @@
 package basics;
-interface PaymentService {
-    void pay(String upiId, double amount);
-    void checkBalance();
-}
-
-// Custom Exception 1
-class InsufficientBalanceException extends Exception {
-    InsufficientBalanceException(String message) {
-        super(message);
-    }
-}
-
-// Custom Exception 2
-class InvalidUPIException extends Exception {
-    InvalidUPIException(String message) {
-        super(message);
-    }
-}
-
-// Custom Exception 3
-class InvalidAmountException extends Exception {
-    InvalidAmountException(String message) {
-        super(message);
-    }
-}
-
-// Wallet Class
-class Wallet {
-    private String userName;
-    private String mobileNumber;
-    private String upiId;
-    private double balance;
+class Account {
+    int accountNumber;
+    String accountHolderName;
+    double balance;
+    String accountType;
 
     // Constructor
-    Wallet(String userName, String mobileNumber,
-           String upiId, double balance) {
-        this.userName = userName;
-        this.mobileNumber = mobileNumber;
-        this.upiId = upiId;
+    Account(int accountNumber, String accountHolderName,
+            double balance, String accountType) {
+        this.accountNumber = accountNumber;
+        this.accountHolderName = accountHolderName;
         this.balance = balance;
+        this.accountType = accountType;
     }
 
-    // Add money
-    void addMoney(double amount) throws InvalidAmountException {
-        if (amount <= 0) {
-            throw new InvalidAmountException(
-                "Amount must be greater than zero."
-            );
-        }
-
+    // Deposit method
+    void deposit(double amount) {
         balance = balance + amount;
-        System.out.println(amount + " added to wallet successfully.");
+        System.out.println(amount + " deposited successfully.");
     }
 
-    // Deduct money
-    void deductMoney(double amount) {
-        balance = balance - amount;
+    // Withdraw method
+    void withdraw(double amount) {
+        if (amount <= balance) {
+            balance = balance - amount;
+            System.out.println(amount + " withdrawn successfully.");
+        } else {
+            System.out.println("Insufficient balance.");
+        }
     }
 
-    // Get balance
-    double getBalance() {
-        return balance;
+    // Transfer method
+    void transfer(Account receiver, double amount) {
+        if (amount <= balance) {
+            balance = balance - amount;
+            receiver.balance = receiver.balance + amount;
+            System.out.println(amount + " transferred successfully.");
+        } else {
+            System.out.println("Insufficient balance for transfer.");
+        }
     }
 
-    // Display wallet details
-    void displayWalletDetails() {
-        System.out.println("----- Wallet Details -----");
-        System.out.println("User Name: " + userName);
-        System.out.println("Mobile Number: " + mobileNumber);
-        System.out.println("UPI ID: " + upiId);
+    // Display account details
+    void displayAccountDetails() {
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Account Holder: " + accountHolderName);
+        System.out.println("Account Type: " + accountType);
         System.out.println("Balance: " + balance);
     }
 }
 
-// UPI Payment Class
-class UPIPayment implements PaymentService {
+// Savings Account
+class SavingsAccount extends Account {
+    double interestRate;
 
-    private Wallet wallet;
-
-    // Constructor
-    UPIPayment(Wallet wallet) {
-        this.wallet = wallet;
+    SavingsAccount(int accountNumber, String accountHolderName,
+                   double balance, double interestRate) {
+        super(accountNumber, accountHolderName, balance, "Savings");
+        this.interestRate = interestRate;
     }
 
-    // Pay method
-    @Override
-    public void pay(String upiId, double amount) {
-
-        try {
-            // Validate UPI ID
-            if (!upiId.contains("@") ||
-                upiId.startsWith("@") ||
-                upiId.endsWith("@")) {
-
-                throw new InvalidUPIException(
-                    "Invalid UPI ID."
-                );
-            }
-
-            // Validate amount
-            if (amount <= 0) {
-                throw new InvalidAmountException(
-                    "Payment amount must be greater than zero."
-                );
-            }
-
-            // Check sufficient balance
-            if (amount > wallet.getBalance()) {
-                throw new InsufficientBalanceException(
-                    "Insufficient wallet balance."
-                );
-            }
-
-            // Deduct payment amount
-            wallet.deductMoney(amount);
-
-            System.out.println(
-                "Payment of " + amount +
-                " made successfully to " + upiId
-            );
-
-        } catch (InvalidUPIException e) {
-            System.out.println(
-                "Transaction Failed: " + e.getMessage()
-            );
-
-        } catch (InvalidAmountException e) {
-            System.out.println(
-                "Transaction Failed: " + e.getMessage()
-            );
-
-        } catch (InsufficientBalanceException e) {
-            System.out.println(
-                "Transaction Failed: " + e.getMessage()
-            );
-
-        } finally {
-            System.out.println(
-                "Transaction process completed."
-            );
-        }
-    }
-
-    // Check balance
-    @Override
-    public void checkBalance() {
-        System.out.println(
-            "Available Balance: " + wallet.getBalance()
-        );
+    // Calculate interest
+    void calculateInterest() {
+        double interest = balance * interestRate / 100;
+        balance = balance + interest;
+        System.out.println("Interest added: " + interest);
     }
 }
 
-// Main Class
-public class DigitalPaymentDemo {
+// Current Account
+class CurrentAccount extends Account {
+    double overdraftLimit;
 
+    CurrentAccount(int accountNumber, String accountHolderName,
+                   double balance, double overdraftLimit) {
+        super(accountNumber, accountHolderName, balance, "Current");
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    // Method overriding
+    @Override
+    void withdraw(double amount) {
+        if (amount <= balance + overdraftLimit) {
+            balance = balance - amount;
+            System.out.println(amount + " withdrawn successfully.");
+        } else {
+            System.out.println("Withdrawal exceeds overdraft limit.");
+        }
+    }
+}
+
+// Main class
+public class BankAccountDemo {
     public static void main(String[] args) {
 
-        // Create wallet
-        Wallet wallet = new Wallet(
-            "Sita",
-            "9876543210",
-            "sita@upi",
-            5000
-        );
+        // Creating objects
+        SavingsAccount savings =
+            new SavingsAccount(101, "Sita", 10000, 5);
 
-        // Create payment object
-        UPIPayment payment = new UPIPayment(wallet);
+        CurrentAccount current =
+            new CurrentAccount(102, "Anu", 5000, 3000);
 
-        // Display wallet details
-        wallet.displayWalletDetails();
+        System.out.println("----- BEFORE TRANSACTIONS -----");
 
-        System.out.println("\n----- Add Money -----");
+        savings.displayAccountDetails();
+        System.out.println();
 
-        try {
-            wallet.addMoney(2000);
-        } catch (InvalidAmountException e) {
-            System.out.println(e.getMessage());
-        }
+        current.displayAccountDetails();
 
-        System.out.println("\n----- Check Balance -----");
-        payment.checkBalance();
+        System.out.println("\n----- TRANSACTIONS -----");
 
-        System.out.println("\n----- UPI Payment -----");
-        payment.pay("anu@upi", 3000);
+        // Deposit
+        savings.deposit(2000);
 
-        System.out.println("\n----- Invalid UPI Test -----");
-        payment.pay("anuupi", 500);
+        // Withdrawal
+        savings.withdraw(1000);
 
-        System.out.println("\n----- Invalid Amount Test -----");
-        payment.pay("anu@upi", -100);
+        // Interest calculation
+        savings.calculateInterest();
 
-        System.out.println("\n----- Insufficient Balance Test -----");
-        payment.pay("anu@upi", 10000);
+        // Current account withdrawal
+        current.withdraw(7000);
 
-        System.out.println("\n----- Final Wallet Details -----");
-        wallet.displayWalletDetails();
+        // Fund transfer
+        savings.transfer(current, 2000);
 
-        System.out.println(
-            "\nFinal Wallet Balance: " + wallet.getBalance()
-        );
+        System.out.println("\n----- AFTER TRANSACTIONS -----");
+
+        savings.displayAccountDetails();
+        System.out.println();
+
+        current.displayAccountDetails();
+
+        System.out.println("\nFinal Balance of Savings Account: "
+                           + savings.balance);
+
+        System.out.println("Final Balance of Current Account: "
+                           + current.balance);
     }
 }
 
